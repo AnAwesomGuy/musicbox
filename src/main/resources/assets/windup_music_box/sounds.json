@@ -1,0 +1,12 @@
+{
+  "block.music_box.music_box_note": {
+    "sounds": [
+      "windup_music_box:music_box_note_c4"
+    ]
+  },
+  "block.music_box.music_box_wind_up": {
+    "sounds": [
+      "windup_music_box:music_box_wind_up"
+    ]
+  }
+}

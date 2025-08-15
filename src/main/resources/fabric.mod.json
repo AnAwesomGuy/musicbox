@@ -1,0 +1,37 @@
+{
+  "schemaVersion": 1,
+  "id": "windup_music_box",
+  "version": "${version}",
+  "name": "${display_name}",
+  "description": "Adds a wind-up music box. Made for ModFest: Toybox!",
+  "authors": [
+    "AnAwesomGuy"
+  ],
+  "contact": {
+    "sources": "https://github.com/${github}"
+  },
+  "license": "MS-RL",
+  "icon": "assets/windup_music_box/icon.png",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "net.anawesomguy.musicbox.WindupMusicBoxMod"
+    ],
+    "client": [
+      "net.anawesomguy.musicbox.WindupMusicBoxClient"
+    ]
+  },
+  "mixins": [
+    "windup_music_box.mixins.json",
+    {
+      "config": "windup_music_box.client.mixins.json",
+      "environment": "client"
+    }
+  ],
+  "depends": {
+    "fabricloader": ">=0.15",
+    "minecraft": "~1.21.8",
+    "java": ">=21",
+    "fabric-api": "*"
+  }
+}

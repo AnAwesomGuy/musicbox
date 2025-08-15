@@ -1,0 +1,106 @@
+plugins {
+    id 'fabric-loom' version "${loom_version}"
+    id 'me.modmuss50.mod-publish-plugin' version '0.8.+'
+//    id 'maven-publish'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+repositories {
+    // Add repositories to retrieve artifacts from in here.
+    // You should only use this when depending on other mods because
+    // Loom adds the essential maven repositories to download Minecraft and libraries from automatically.
+    // See https://docs.gradle.org/current/userguide/declaring_repositories.html
+    // for more information about repositories.
+}
+
+loom {
+    splitEnvironmentSourceSets()
+
+    mods {
+        "windup_music_box" {
+            sourceSet sourceSets.main
+            sourceSet sourceSets.client
+        }
+    }
+
+}
+
+//fabricApi {
+//    configureDataGeneration {
+//        client = true
+//    }
+//}
+
+dependencies {
+    // To change the versions see the gradle.properties file
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+    // Fabric API. This is technically optional, but you probably want it anyway.
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+}
+
+processResources {
+    def properties = [
+            display_name: display_name, version: project.version,
+            github: github, modrinth_id: modrinth_id
+    ]
+
+    inputs.properties properties
+
+    filesMatching("fabric.mod.json") {
+        expand properties
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 21
+}
+
+java {
+    withSourcesJar()
+
+    sourceCompatibility = targetCompatibility = JavaVersion.VERSION_21
+}
+
+jar {
+    inputs.property "archivesName", project.base.archivesName
+
+    from("LICENSE") {
+        rename { "${it}_${inputs.properties.archivesName}"}
+    }
+}
+
+publishMods {
+    file = remapJar.archiveFile
+    additionalFiles.from remapSourcesJar.archiveFile
+    type = STABLE
+    changelog = file("CHANGELOG.md").text
+    modLoaders.add 'fabric'
+    displayName = "$display_name $mod_version"
+
+    modrinth {
+        projectId = modrinth_id
+        accessToken = providers.environmentVariable 'MODRINTH_TOKEN'
+        minecraftVersions.addAll '1.21.7', '1.21.8'
+
+        requires {
+            slug = 'fabric-api'
+        }
+    }
+
+    github {
+        accessToken = providers.environmentVariable 'GITHUB_TOKEN'
+        repository = github
+        tagName = mod_version
+        commitish = 'master'
+    }
+}
