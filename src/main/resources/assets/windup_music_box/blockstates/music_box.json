@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "windup_music_box:block/music_box"
+    }
+  }
+}

@@ -6,17 +6,60 @@ import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityT
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
+import net.minecraft.sound.SoundCategory;
+import net.minecraft.util.ActionResult;
+import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 
 public class MusicBoxBlockEntity extends BlockEntity {
     public static final BlockEntityType<MusicBoxBlockEntity> TYPE = FabricBlockEntityTypeBuilder.create(
             MusicBoxBlockEntity::new, WindupMusicBoxMod.MUSIC_BOX).build();
+    public static final int
+            KEY_ROTATION = 360 / 30, // 12
+            MAX_TENSION = 36;
 
+    public static void tick(World world, BlockPos pos, BlockState state, MusicBoxBlockEntity entity) {
+        entity.ticks++;
+        if (entity.windCooldown > 0)
+            entity.windCooldown--;
+    }
+
+    public int ticks;
+    private int windCooldown = 0;
+    private int keyRotation = 1;
+    private int tension = 0;
+    public boolean open = true;
     public MusicBoxDrumComponent drumComponent = null;
 
     public MusicBoxBlockEntity(BlockPos pos, BlockState state) {
         super(TYPE, pos, state);
+    }
+
+    public boolean isWinding() {
+        return windCooldown > 0;
+    }
+
+    public int getTension() {
+        return tension;
+    }
+
+    public int getKeyRotation() {
+        return keyRotation;
+    }
+
+    public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, BlockHitResult hit) {
+        if (player.isSneaking())
+            open = !open;
+        else if (!isWinding() && tension < MAX_TENSION) {
+            windCooldown = 6;
+            keyRotation = (keyRotation + 1) % KEY_ROTATION;
+            tension++;
+            world.playSound(null, pos, WindupMusicBoxMod.MUSIC_BOX_WIND_UP, SoundCategory.BLOCKS, 1F, 1F);
+        }
+        return ActionResult.SUCCESS;
     }
 
     public ItemStack getPickStack(ItemStack in) {
