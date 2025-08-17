@@ -55,10 +55,9 @@ public class MusicBoxBlock extends Block implements BlockEntityProvider {
         return SHAPE;
     }
 
-    @SuppressWarnings("DataFlowIssue")
     @Override
     public BlockState getPlacementState(ItemPlacementContext ctx) {
-        return super.getPlacementState(ctx).with(ROTATION, RotationPropertyHelper.fromYaw(ctx.getPlayerYaw()));
+        return this.getDefaultState().with(ROTATION, RotationPropertyHelper.fromYaw(ctx.getPlayerYaw()));
     }
 
     @Override
@@ -81,15 +80,15 @@ public class MusicBoxBlock extends Block implements BlockEntityProvider {
     protected ItemStack getPickStack(WorldView world, BlockPos pos, BlockState state, boolean includeData) {
         ItemStack stack = super.getPickStack(world, pos, state, includeData);
         return includeData ?
-                ((MusicBoxBlockEntity)requireNonNull(world.getBlockEntity(pos))).getPickStack(stack) :
-                stack;
+            ((MusicBoxBlockEntity)requireNonNull(world.getBlockEntity(pos))).getPickStack(stack) :
+            stack;
     }
 
     @Override
     protected ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, BlockHitResult hit) {
-        if (world.getBlockEntity(pos) instanceof MusicBoxBlockEntity blockEntity)
-            return blockEntity.onUse(state, world, pos, player, hit);
-        return ActionResult.PASS;
+        return world.getBlockEntity(pos) instanceof MusicBoxBlockEntity blockEntity ?
+            blockEntity.onUse(world, pos, player) :
+            ActionResult.PASS;
     }
 
     @Override

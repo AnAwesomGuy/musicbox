@@ -1,6 +1,7 @@
 package net.anawesomguy.musicbox.client.block;
 
 import net.anawesomguy.musicbox.block.MusicBoxBlockEntity;
+import net.anawesomguy.musicbox.item.MusicBoxDrumComponent;
 import net.minecraft.client.model.Dilation;
 import net.minecraft.client.model.Model;
 import net.minecraft.client.model.ModelData;
@@ -15,6 +16,7 @@ import static net.minecraft.client.model.ModelPartBuilder.create;
 import static net.minecraft.util.math.MathHelper.HALF_PI;
 import static net.minecraft.util.math.MathHelper.PI;
 import static net.minecraft.util.math.MathHelper.RADIANS_PER_DEGREE;
+import static net.minecraft.util.math.MathHelper.TAU;
 
 public class MusicBoxModel extends Model {
     private final ModelPart key;
@@ -77,7 +79,10 @@ public class MusicBoxModel extends Model {
     }
 
     public void update(MusicBoxBlockEntity entity) {
-        drum.visible = true;
+        MusicBoxDrumComponent component = entity.drumComponent;
+        //noinspection AssignmentUsedAsCondition
+        if (drum.visible = (component != null))
+            drum.pitch = TAU * ((float)entity.getCurrentNote() / component.getNotes().length - 1);
         lid.pitch = (entity.open ? RADIANS_PER_DEGREE * 30F : -HALF_PI);
         key.roll = RADIANS_PER_DEGREE * 30F * entity.getKeyRotation();
     }

@@ -10,18 +10,29 @@ import com.mojang.serialization.codecs.RecordCodecBuilder;
 import it.unimi.dsi.fastutil.floats.FloatList;
 import it.unimi.dsi.fastutil.shorts.ShortArrayList;
 import it.unimi.dsi.fastutil.shorts.ShortList;
+import net.minecraft.component.ComponentsAccess;
+import net.minecraft.item.Item;
+import net.minecraft.item.tooltip.TooltipAppender;
+import net.minecraft.item.tooltip.TooltipType;
+import net.minecraft.text.Text;
+import net.minecraft.util.Formatting;
 import net.minecraft.util.dynamic.Codecs;
 import org.apache.commons.lang3.StringUtils;
 
+import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-public final class MusicBoxDrumComponent {
-    public static final Codec<short[]> NOTES_CODEC = Codec.of(MusicBoxDrumComponent::encodeNotes, MusicBoxDrumComponent::decodeNotes);
+public final class MusicBoxDrumComponent implements TooltipAppender {
+    public static final Codec<short[]> NOTES_CODEC = Codec.of(MusicBoxDrumComponent::encodeNotes,
+                                                              MusicBoxDrumComponent::decodeNotes);
     public static final Codec<MusicBoxDrumComponent> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-            Codec.INT.optionalFieldOf("key_offset", 0).forGetter(MusicBoxDrumComponent::getKeyOffset),
-            Codec.BOOL.optionalFieldOf("minor", Boolean.FALSE).forGetter(MusicBoxDrumComponent::isInMinor),
-            Codecs.POSITIVE_INT.fieldOf("ticksPerBeat").forGetter(MusicBoxDrumComponent::getTicksPerBeat),
-            NOTES_CODEC.fieldOf("notes").forGetter(MusicBoxDrumComponent::getNotes)
+        Codec.INT.optionalFieldOf("key_offset", 0).forGetter(MusicBoxDrumComponent::getKeyOffset),
+        Codec.BOOL.optionalFieldOf("minor", Boolean.FALSE).forGetter(MusicBoxDrumComponent::isInMinor),
+        Codecs.POSITIVE_INT.fieldOf("ticks_per_beat").forGetter(MusicBoxDrumComponent::getTicksPerBeat),
+        Codec.STRING.optionalFieldOf("song_artist", "").forGetter(MusicBoxDrumComponent::getArtist),
+        Codec.STRING.fieldOf("song_name").forGetter(MusicBoxDrumComponent::getSongName),
+        NOTES_CODEC.fieldOf("notes").forGetter(MusicBoxDrumComponent::getNotes)
     ).apply(instance, MusicBoxDrumComponent::new));
 
     public static final int TOTAL_BEATS = 36; // length of the music
@@ -48,6 +59,8 @@ public final class MusicBoxDrumComponent {
     private final int keyOffset;
     private final boolean minor;
     private final int ticksPerBeat; // the music box is always in x/4 tempo so one beat is a quarter note
+    private final String artist;
+    private final String songName;
     /**
      * An array of all the notes. The first element of the array would be played on the first {@link #ticksPerNote}, the second on the second, and so on.
      * <p>
@@ -58,12 +71,14 @@ public final class MusicBoxDrumComponent {
     private final short[] notes;
     private final int ticksPerNote; // ticks per each value in `notes`
 
-    public MusicBoxDrumComponent(int keyOffset, boolean minor, int ticksPerBeat) {
+    public MusicBoxDrumComponent(int keyOffset, boolean minor, int ticksPerBeat, String artist, String song) {
         this.keyOffset = keyOffset;
         this.minor = minor;
         if (ticksPerBeat <= 0)
             throw new IllegalArgumentException("ticksPerBeat is not positive");
         this.ticksPerBeat = ticksPerBeat;
+        this.artist = Objects.requireNonNull(artist);
+        this.songName = Objects.requireNonNull(song);
         // basically, if it's divisible by 2, then ticksPerNote = ticksPerBeat / 2,
         // if it's divisible by 4, then it's ticksPerBeat / 4,
         // and the same for 8
@@ -71,10 +86,32 @@ public final class MusicBoxDrumComponent {
         this.notes = new short[TOTAL_BEATS * ticksPerNote];
     }
 
-    public MusicBoxDrumComponent(int keyOffset, boolean minor, int ticksPerBeat, short[] notes) {
-        this(keyOffset, minor, ticksPerBeat);
+    public MusicBoxDrumComponent(int keyOffset, boolean minor, int ticksPerBeat, String artist, String song, short[] notes) {
+        this(keyOffset, minor, ticksPerBeat, artist, song);
         System.arraycopy(notes, 0, this.notes, 0, Math.min(notes.length, this.notes.length));
+    }
 
+    public void getPitches(int index, FloatList output) {
+        output.clear();
+        short notes = this.notes[index];
+        if (notes == 0 || notes == -32768)
+            return;
+        int i = NOTES_RANGE;
+        while (i-- > 0) { // 14, 13, ... 1, 0
+            if ((notes & 1) == 1) {
+                int semitoneOffset = (minor ? MINOR_OFFSETS : MAJOR_OFFSETS)[i % SCALE_LENGTH] + keyOffset;
+                output.add((float)Math.pow(2.0, semitoneOffset / 12.0));
+            }
+            notes >>>= 1;
+        }
+    }
+
+    public String getArtist() {
+        return artist;
+    }
+
+    public String getSongName() {
+        return songName;
     }
 
     // PLEASE DO NOT MODIFY
@@ -118,11 +155,11 @@ public final class MusicBoxDrumComponent {
                     j = 0;
                 }
                 list.add(ops.createString(
-                        StringUtils.leftPad(
-                                StringUtils.substring(Integer.toBinaryString(note), -NOTES_RANGE),
-                                NOTES_RANGE,
-                                '0'
-                        )));
+                    StringUtils.leftPad(
+                        StringUtils.substring(Integer.toBinaryString(note), -NOTES_RANGE),
+                        NOTES_RANGE,
+                        '0'
+                    )));
             }
         }
         return list.build(prefix);
@@ -150,7 +187,7 @@ public final class MusicBoxDrumComponent {
                 DataResult<Number> oNum = ops.getNumberValue(t);
                 if (oNum.isSuccess()) {
                     int s = oNum.getOrThrow().intValue();
-                    while (s --> 0) {
+                    while (s-- > 0) {
                         list.add((short)0);
                     }
                 }
@@ -158,5 +195,16 @@ public final class MusicBoxDrumComponent {
             });
             return Pair.of(list.toShortArray(), ops.createList(failed.build()));
         });
+    }
+
+    @Override
+    public void appendTooltip(Item.TooltipContext context, Consumer<Text> textConsumer, TooltipType type, ComponentsAccess components) {
+        if (!songName.isEmpty()) {
+            Text songText = Text.literal(songName).formatted(Formatting.ITALIC, Formatting.GRAY);
+            Text text = artist.isEmpty() ?
+                songText :
+                Text.literal(artist + " - ").formatted(Formatting.GRAY).append(songText);
+            textConsumer.accept(text);
+        }
     }
 }

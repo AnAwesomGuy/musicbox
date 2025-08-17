@@ -4,6 +4,7 @@ import net.anawesomguy.musicbox.block.MusicBoxBlock;
 import net.anawesomguy.musicbox.block.MusicBoxBlockEntity;
 import net.anawesomguy.musicbox.item.MusicBoxDrumComponent;
 import net.fabricmc.api.ModInitializer;
+import net.fabricmc.fabric.api.item.v1.ComponentTooltipAppenderRegistry;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.component.ComponentType;
@@ -16,12 +17,9 @@ import net.minecraft.registry.RegistryKeys;
 import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class WindupMusicBoxMod implements ModInitializer {
     public static final String MOD_ID = "windup_music_box";
-    public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
     public static final Identifier MUSIC_BOX_ID = Identifier.of(MOD_ID, "music_box");
     public static final Block MUSIC_BOX = new MusicBoxBlock(
@@ -48,6 +46,8 @@ public class WindupMusicBoxMod implements ModInitializer {
 
         Registry.register(Registries.SOUND_EVENT, MUSIC_BOX_NOTE.id(), MUSIC_BOX_NOTE);
         Registry.register(Registries.SOUND_EVENT, MUSIC_BOX_WIND_UP.id(), MUSIC_BOX_WIND_UP);
+
+        ComponentTooltipAppenderRegistry.addLast(DRUM_COMPONENT);
     }
 
     public static Identifier id(String path) {
