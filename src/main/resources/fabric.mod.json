@@ -5,10 +5,13 @@
   "name": "${display_name}",
   "description": "Adds a wind-up music box. Made for ModFest: Toybox!",
   "authors": [
-    "AnAwesomGuy"
+    "AnAwesomGuy",
+    "Aethyus (art)"
   ],
   "contact": {
-    "sources": "https://github.com/${github}"
+    "sources": "https://github.com/${github}",
+    "issues": "https://github.com/${github}",
+    "homepage": "https://modrinth.com/mod/${modrinth_id}"
   },
   "license": "MS-RL",
   "icon": "assets/windup_music_box/icon.png",
