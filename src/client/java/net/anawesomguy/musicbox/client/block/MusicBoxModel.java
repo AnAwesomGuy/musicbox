@@ -1,6 +1,5 @@
 package net.anawesomguy.musicbox.client.block;
 
-import net.anawesomguy.musicbox.block.MusicBoxBlock;
 import net.anawesomguy.musicbox.block.MusicBoxBlockEntity;
 import net.minecraft.client.model.Dilation;
 import net.minecraft.client.model.Model;
@@ -11,12 +10,11 @@ import net.minecraft.client.model.ModelPartData;
 import net.minecraft.client.model.ModelTransform;
 import net.minecraft.client.model.TexturedModelData;
 import net.minecraft.client.render.RenderLayer;
-import net.minecraft.util.math.RotationPropertyHelper;
 
 import static net.minecraft.client.model.ModelPartBuilder.create;
+import static net.minecraft.util.math.MathHelper.HALF_PI;
 import static net.minecraft.util.math.MathHelper.PI;
 import static net.minecraft.util.math.MathHelper.RADIANS_PER_DEGREE;
-import static net.minecraft.util.math.MathHelper.TAU;
 
 public class MusicBoxModel extends Model {
     private final ModelPart key;
@@ -37,50 +35,50 @@ public class MusicBoxModel extends Model {
         ModelPartData modelPartData = modelData.getRoot();
 
         modelPartData.addChild("key",
-                               create().uv(0, 12)
+                               create().uv(24, 5)
                                        .cuboid(-0.5F, -0.5F, 0F, 1F, 1F, 2F)
-                                       .uv(0, 15)
-                                       .cuboid(-1.5F, -0.5F, 0F, 3F, 1F, 0F),
-                               ModelTransform.origin(2.5F, 20.5F, -7F));
+                                       .uv(24, 0)
+                                       .cuboid(-1.5F, -0.5F, 0.001F, 3F, 1F, 0F),
+                               ModelTransform.origin(5.5F, 3.5F, 1F));
 
-        ModelPartData shell = modelPartData.addChild("shell", create().uv(0, 8).cuboid(-4F, -2F, -4F, 8F, 1F, 8F),
+        ModelPartData shell = modelPartData.addChild("shell", create().uv(0, 0).cuboid(4F, 1F, 4F, 8F, 1F, 8F),
                                                      ModelTransform.NONE);
-        ModelPartBuilder side = create().uv(0, 0).cuboid(-5F, -7F, 4F, 9F, 7F, 1F);
-        shell.addChild("north", side, ModelTransform.rotation(0F, PI, 0F));
-        shell.addChild("south", side, ModelTransform.NONE);
-        shell.addChild("east", side, ModelTransform.rotation(0F, -TAU, 0F));
-        shell.addChild("west", side, ModelTransform.rotation(0F, TAU, 0F));
+        ModelPartBuilder side = create().uv(22, 9).cuboid(-5F, 0F, 4F, 9F, 7F, 1F);
+        shell.addChild("north", side, ModelTransform.of(8F, 0F, 8F, 0F, PI, 0F));
+        shell.addChild("south", side, ModelTransform.origin(8F, 0F, 8F));
+        shell.addChild("east", side, ModelTransform.of(8F, 0F, 8F, 0F, -HALF_PI, 0));
+        shell.addChild("west", side, ModelTransform.of(8F, 0F, 8F, 0F, HALF_PI, 0F));
 
-        ModelPartData insides = modelPartData.addChild("insides", create().uv(0, 24)
-                                                                          .cuboid(1F, -6F, -4F, 3F, 4F, 4F)
-                                                                          .uv(18, 0)
-                                                                          .cuboid(-4F, -4F, 0F, 5F, 0F, 4F)
-                                                                          .uv(0, 17)
-                                                                          .cuboid(-4F, -2.5F, 0F, 8F, 1F, 4F)
-                                                                          .uv(-3, 29)
-                                                                          .cuboid(2F, -6F, 0F, 1F, 0F, 3F)
-                                                                          .uv(4, 17)
-                                                                          .cuboid(2F, -6.25F, 1.5F, 1F, 4F, 1F,
-                                                                                  new Dilation(-0.24999F)),
+        ModelPartData insides = modelPartData.addChild("insides", create().uv(24, 17)
+                                                                          .mirrored()
+                                                                          .cuboid(4F, 2F, 4F, 3F, 4F, 4F)
+                                                                          .uv(16, 25)
+                                                                          .cuboid(7F, 4F, 8F, 5F, 0F, 4F)
+                                                                          .uv(0, 20)
+                                                                          .cuboid(4F, 1.5F, 8F, 8F, 1F, 4F)
+                                                                          .uv(35, 21)
+                                                                          .cuboid(5F, 6F, 8F, 1F, 0F, 3F)
+                                                                          .uv(32, 4)
+                                                                          .cuboid(5F, 2.249F, 9.5F, 1F, 4F, 1F,
+                                                                                  new Dilation(-0.25F)),
                                                        ModelTransform.NONE);
-        insides.addChild("gear", create().uv(0, 28).cuboid(-0.5F, -1F, -1F, 1F, 2F, 2F),
-                         ModelTransform.of(2.5F, -3F, 0.25F, PI / -4F, 0F, 0F));
+        insides.addChild("gear", create().uv(36, 5).cuboid(-0.5F, -1F, -0.5F, 1F, 2F, 2F),
+                         ModelTransform.of(5.5F, 3F, 7.75F, PI / -4F, 0F, 0F));
 
-        modelPartData.addChild("governer", create().uv(0, 30).cuboid(1F, -5.5F, 1.5F, 3F, 1F, 1F, new Dilation(-0.1F)),
-                               ModelTransform.NONE);
-        modelPartData.addChild("drum", create().uv(11, 26).cuboid(-2.5F, -1.5F, -1.5F, 5F, 3F, 3F),
-                               ModelTransform.of(-1.5F, -4F, -2F, PI / 4F, 0F, 0F));
-        modelPartData.addChild("lid", create().uv(0, 0).cuboid(-5F, -10F, 0F, 10F, 10F, 1F),
-                               ModelTransform.origin(0F, -7F, 5F));
+        modelPartData.addChild("governer",
+                               create().uv(30, 27).cuboid(-1.5F, -0.5F, -0.5F, 3F, 1F, 1F, new Dilation(-0.1F)),
+                               ModelTransform.origin(5.5F, 5, 10));
+        modelPartData.addChild("drum", create().uv(0, 25).cuboid(-2.5F, -1.5F, -1.5F, 5F, 3F, 3F),
+                               ModelTransform.of(9.5F, 4F, 6F, PI / 4F, 0F, 0F));
+        modelPartData.addChild("lid", create().uv(0, 9).cuboid(-5F, 0F, 0F, 10F, 10F, 1F),
+                               ModelTransform.origin(8F, 7F, 13F));
 
-        return TexturedModelData.of(modelData, 32, 32);
+        return TexturedModelData.of(modelData, 64, 32);
     }
 
     public void update(MusicBoxBlockEntity entity) {
-        getRootPart().yaw = RotationPropertyHelper.toDegrees(
-            entity.getCachedState().get(MusicBoxBlock.ROTATION)) * RADIANS_PER_DEGREE;
-        drum.visible = entity.drumComponent != null;
-        lid.pitch = (entity.open ? RADIANS_PER_DEGREE * -30F : PI / 4);
+        drum.visible = true;
+        lid.pitch = (entity.open ? RADIANS_PER_DEGREE * 30F : -HALF_PI);
         key.roll = RADIANS_PER_DEGREE * 30F * entity.getKeyRotation();
     }
 }

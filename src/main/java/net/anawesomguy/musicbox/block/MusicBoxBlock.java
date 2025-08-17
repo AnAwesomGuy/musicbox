@@ -33,7 +33,7 @@ public class MusicBoxBlock extends Block implements BlockEntityProvider {
     public static final MapCodec<MusicBoxBlock> CODEC = createCodec(MusicBoxBlock::new);
     public static final IntProperty ROTATION = Properties.ROTATION;
     public static final int MAX_ROTATIONS = RotationPropertyHelper.getMax() + 1;
-    public static final VoxelShape SHAPE = createColumnShape(9, 0, 8);
+    public static final VoxelShape SHAPE = createColumnShape(10, 0, 8);
 
     public MusicBoxBlock(Settings settings) {
         super(settings);

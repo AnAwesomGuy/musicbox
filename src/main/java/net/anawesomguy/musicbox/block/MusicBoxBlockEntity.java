@@ -9,6 +9,8 @@ import net.minecraft.block.entity.BlockEntityType;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.ItemStack;
 import net.minecraft.sound.SoundCategory;
+import net.minecraft.sound.SoundEvent;
+import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.math.BlockPos;
@@ -16,10 +18,10 @@ import net.minecraft.world.World;
 
 public class MusicBoxBlockEntity extends BlockEntity {
     public static final BlockEntityType<MusicBoxBlockEntity> TYPE = FabricBlockEntityTypeBuilder.create(
-            MusicBoxBlockEntity::new, WindupMusicBoxMod.MUSIC_BOX).build();
+        MusicBoxBlockEntity::new, WindupMusicBoxMod.MUSIC_BOX).build();
     public static final int
-            KEY_ROTATION = 360 / 30, // 12
-            MAX_TENSION = 36;
+        KEY_ROTATION = 360 / 30, // 12
+        MAX_TENSION = 36;
 
     public static void tick(World world, BlockPos pos, BlockState state, MusicBoxBlockEntity entity) {
         entity.ticks++;
@@ -50,14 +52,18 @@ public class MusicBoxBlockEntity extends BlockEntity {
         return keyRotation;
     }
 
+    @SuppressWarnings("AssignmentUsedAsCondition")
     public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, BlockHitResult hit) {
-        if (player.isSneaking())
-            open = !open;
-        else if (!isWinding() && tension < MAX_TENSION) {
+        if (player.isSneaking()) {
+            SoundEvent sound = (open = !open) ? SoundEvents.BLOCK_WOODEN_TRAPDOOR_OPEN : SoundEvents.BLOCK_WOODEN_TRAPDOOR_CLOSE;
+            world.playSound(player, pos, sound, SoundCategory.BLOCKS, 1F,
+                            world.getRandom().nextFloat() * 0.1F + 0.9F);
+        } else if (!isWinding() && tension < MAX_TENSION) {
             windCooldown = 6;
             keyRotation = (keyRotation + 1) % KEY_ROTATION;
             tension++;
-            world.playSound(null, pos, WindupMusicBoxMod.MUSIC_BOX_WIND_UP, SoundCategory.BLOCKS, 1F, 1F);
+            world.playSound(null, pos, WindupMusicBoxMod.MUSIC_BOX_WIND_UP, SoundCategory.BLOCKS, 1F,
+                            world.getRandom().nextFloat() * 0.1F + 0.9F);
         }
         return ActionResult.SUCCESS;
     }

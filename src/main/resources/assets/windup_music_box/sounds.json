@@ -2,11 +2,13 @@
   "block.music_box.music_box_note": {
     "sounds": [
       "windup_music_box:music_box_note_c4"
-    ]
+    ],
+    "subtitle": "subtitles.windup_music_box.music_box.play"
   },
   "block.music_box.music_box_wind_up": {
     "sounds": [
       "windup_music_box:music_box_wind_up"
-    ]
+    ],
+    "subtitle": "subtitles.windup_music_box.music_box.wind_up"
   }
 }
