@@ -7,7 +7,7 @@ import com.mojang.serialization.DynamicOps;
 import com.mojang.serialization.Lifecycle;
 import com.mojang.serialization.ListBuilder;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
-import it.unimi.dsi.fastutil.floats.FloatList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.shorts.ShortArrayList;
 import it.unimi.dsi.fastutil.shorts.ShortList;
 import net.minecraft.component.ComponentsAccess;
@@ -40,21 +40,7 @@ public final class MusicBoxDrumComponent implements TooltipAppender {
 
     private static final int[] MAJOR_OFFSETS = {0, 2, 4, 5, 7, 9, 11}; // semi-tone offsets in a major key
     private static final int[] MINOR_OFFSETS = {0, 2, 3, 5, 7, 8, 10}; // semi-tone offsets in a minor key
-    private static final int SCALE_LENGTH = MAJOR_OFFSETS.length;
-
-    public static void getPitches(short notes, int keyOffset, boolean minor, FloatList output) {
-        output.clear();
-        if (notes == 0 || notes == -32768)
-            return;
-        int i = NOTES_RANGE;
-        while (i-- > 0) { // 14, 13, ... 1, 0
-            if ((notes & 1) == 1) {
-                int semitoneOffset = (minor ? MINOR_OFFSETS : MAJOR_OFFSETS)[i % SCALE_LENGTH] + keyOffset;
-                output.add((float)Math.pow(2, semitoneOffset / 12.0));
-            }
-            notes >>>= 1;
-        }
-    }
+    private static final int SCALE_LENGTH = 7; // MAJOR_OFFSETS.length
 
     private final int keyOffset;
     private final boolean minor;
@@ -91,7 +77,7 @@ public final class MusicBoxDrumComponent implements TooltipAppender {
         System.arraycopy(notes, 0, this.notes, 0, Math.min(notes.length, this.notes.length));
     }
 
-    public void getPitches(int index, FloatList output) {
+    public void getSemitones(int index, IntList output) {
         output.clear();
         short notes = this.notes[index];
         if (notes == 0 || notes == -32768)
@@ -100,7 +86,7 @@ public final class MusicBoxDrumComponent implements TooltipAppender {
         while (i-- > 0) { // 14, 13, ... 1, 0
             if ((notes & 1) == 1) {
                 int semitoneOffset = (minor ? MINOR_OFFSETS : MAJOR_OFFSETS)[i % SCALE_LENGTH] + keyOffset;
-                output.add((float)Math.pow(2.0, semitoneOffset / 12.0));
+                output.add(semitoneOffset);
             }
             notes >>>= 1;
         }

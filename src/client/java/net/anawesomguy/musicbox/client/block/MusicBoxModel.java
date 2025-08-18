@@ -1,7 +1,6 @@
 package net.anawesomguy.musicbox.client.block;
 
 import net.anawesomguy.musicbox.block.MusicBoxBlockEntity;
-import net.anawesomguy.musicbox.item.MusicBoxDrumComponent;
 import net.minecraft.client.model.Dilation;
 import net.minecraft.client.model.Model;
 import net.minecraft.client.model.ModelData;
@@ -71,19 +70,22 @@ public class MusicBoxModel extends Model {
                                create().uv(30, 27).cuboid(-1.5F, -0.5F, -0.5F, 3F, 1F, 1F, new Dilation(-0.1F)),
                                ModelTransform.origin(5.5F, 5, 10));
         modelPartData.addChild("drum", create().uv(0, 25).cuboid(-2.5F, -1.5F, -1.5F, 5F, 3F, 3F),
-                               ModelTransform.of(9.5F, 4F, 6F, PI / 4F, 0F, 0F));
+                               ModelTransform.origin(9.5F, 4F, 6F));
         modelPartData.addChild("lid", create().uv(0, 9).cuboid(-5F, 0F, 0F, 10F, 10F, 1F),
                                ModelTransform.origin(8F, 7F, 13F));
 
         return TexturedModelData.of(modelData, 64, 32);
     }
 
-    public void update(MusicBoxBlockEntity entity) {
-        MusicBoxDrumComponent component = entity.drumComponent;
-        //noinspection AssignmentUsedAsCondition
-        if (drum.visible = (component != null))
-            drum.pitch = TAU * ((float)entity.getCurrentNote() / component.getNotes().length - 1);
+    public void update(MusicBoxBlockEntity entity, float tickProgress) {
+        int notesLength = entity.notesLength;
+        if (notesLength > 0) {
+            drum.pitch = TAU * ((float)entity.getCurrentNote() / notesLength - 1) + (PI / 4F) + tickProgress; // 360deg * (value from 0-1)
+            drum.visible = true;
+        } else
+            drum.visible = false;
         lid.pitch = (entity.open ? RADIANS_PER_DEGREE * 30F : -HALF_PI);
         key.roll = RADIANS_PER_DEGREE * 30F * entity.getKeyRotation();
+        governer.yaw = (drum.pitch * 200) % TAU; // it's fast
     }
 }

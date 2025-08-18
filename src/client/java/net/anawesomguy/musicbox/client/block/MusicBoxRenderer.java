@@ -35,7 +35,7 @@ public class MusicBoxRenderer implements BlockEntityRenderer<MusicBoxBlockEntity
 
     @Override
     public void render(MusicBoxBlockEntity entity, float tickProgress, MatrixStack matrices, VertexConsumerProvider vertexConsumers, int light, int overlay, Vec3d cameraPos) {
-        model.update(entity);
+        model.update(entity, tickProgress);
         matrices.push();
         matrices.multiply(
             RotationAxis.NEGATIVE_Y.rotationDegrees(
