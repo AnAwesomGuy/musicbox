@@ -3,7 +3,7 @@ package net.anawesomguy.musicbox.block;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.anawesomguy.musicbox.WindupMusicBoxMod;
-import net.anawesomguy.musicbox.item.MusicBoxDrumComponent;
+import net.anawesomguy.musicbox.item.MusicBoxDataComponent;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntity;
@@ -45,18 +45,18 @@ public class MusicBoxBlockEntity extends BlockEntity {
         if (!world.isClient && entity.tension > 0) {
             int tension = entity.tension;
             entity.tension = tension - 1;
-            MusicBoxDrumComponent drumComponent = entity.drumComponent;
-            if (drumComponent != null) {
-                int ticksPerBeat = drumComponent.getTicksPerBeat();
+            MusicBoxDataComponent data = entity.data;
+            if (data != null) {
+                int ticksPerBeat = data.getTicksPerBeat();
                 if (tension <= 9)
                     //noinspection SuspiciousIntegerDivAssignment (not sus, intended)
                     ticksPerBeat *= tension / 3;
                 if (ticks % ticksPerBeat == 0) {
-                    short[] notes = drumComponent.getNotes();
+                    short[] notes = data.getNotes();
                     int currentNote = entity.currentNote;
                     entity.currentNote = (currentNote + 1) % notes.length;
                     IntList semitones = entity.semitonesCache;
-                    drumComponent.getSemitones(currentNote, semitones);
+                    data.getSemitones(currentNote, semitones);
                     for (int i = 0, semitonesSize = semitones.size(); i < semitonesSize; i++) {
                         double semitone = semitones.getInt(i);
                         world.playSound(null, pos, WindupMusicBoxMod.MUSIC_BOX_NOTE, SoundCategory.BLOCKS,
@@ -83,7 +83,7 @@ public class MusicBoxBlockEntity extends BlockEntity {
     private final IntList semitonesCache = new IntArrayList();
     public boolean open = true;
     @Nullable // always null on the client
-    public MusicBoxDrumComponent drumComponent = null;
+    public MusicBoxDataComponent data = null;
     // @Environment(EnvType.CLIENT)
     public int notesLength;
 
@@ -102,20 +102,20 @@ public class MusicBoxBlockEntity extends BlockEntity {
         nbt.putInt("tension", tension);
         nbt.putBoolean("open", open);
         nbt.putInt("currentNote", 0);
-        nbt.putInt("notesLength", drumComponent == null ? 0 : drumComponent.getNotes().length);
+        nbt.putInt("notesLength", data == null ? 0 : data.getNotes().length);
         return nbt;
     }
 
     @Override
     protected void readComponents(ComponentsAccess components) {
         super.readComponents(components);
-        drumComponent = components.get(WindupMusicBoxMod.DRUM_COMPONENT);
+        data = components.get(WindupMusicBoxMod.MUSIC_BOX_DATA);
     }
 
     @Override
     protected void addComponents(ComponentMap.Builder builder) {
         super.addComponents(builder);
-        builder.add(WindupMusicBoxMod.DRUM_COMPONENT, drumComponent);
+        builder.add(WindupMusicBoxMod.MUSIC_BOX_DATA, data);
     }
 
     @Override
@@ -124,7 +124,7 @@ public class MusicBoxBlockEntity extends BlockEntity {
         tension = view.getInt("tension", 0);
         open = view.getBoolean("open", true);
         currentNote = view.getInt("currentNote", 0);
-        drumComponent = view.read("drumComponent", MusicBoxDrumComponent.CODEC).orElse(null);
+        data = view.read("musicBoxData", MusicBoxDataComponent.CODEC).orElse(null);
         notesLength = view.getOptionalInt("notesLength").orElse(0);
     }
 
@@ -134,8 +134,8 @@ public class MusicBoxBlockEntity extends BlockEntity {
         view.putInt("tension", tension);
         view.putBoolean("open", open);
         view.putInt("currentNote", 0);
-        if (drumComponent != null)
-            view.put("drumComponent", MusicBoxDrumComponent.CODEC, drumComponent);
+        if (data != null)
+            view.put("musicBoxData", MusicBoxDataComponent.CODEC, data);
     }
 
     @SuppressWarnings("deprecation")
@@ -145,7 +145,7 @@ public class MusicBoxBlockEntity extends BlockEntity {
         view.remove("tension");
         view.remove("open");
         view.remove("currentNote");
-        view.remove("drumComponent");
+        view.remove("musicBoxData");
         view.remove("notesLength");
     }
 
@@ -182,7 +182,7 @@ public class MusicBoxBlockEntity extends BlockEntity {
     }
 
     public ItemStack getPickStack(ItemStack in) {
-        in.set(WindupMusicBoxMod.DRUM_COMPONENT, drumComponent);
+        in.set(WindupMusicBoxMod.MUSIC_BOX_DATA, data);
         return in;
     }
 }

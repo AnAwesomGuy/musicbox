@@ -2,7 +2,7 @@ package net.anawesomguy.musicbox;
 
 import net.anawesomguy.musicbox.block.MusicBoxBlock;
 import net.anawesomguy.musicbox.block.MusicBoxBlockEntity;
-import net.anawesomguy.musicbox.item.MusicBoxDrumComponent;
+import net.anawesomguy.musicbox.item.MusicBoxDataComponent;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.item.v1.ComponentTooltipAppenderRegistry;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
@@ -30,14 +30,14 @@ public class WindupMusicBoxMod implements ModInitializer {
                               .nonOpaque()
                               .sounds(BlockSoundGroup.WOOD)
                               .registryKey(RegistryKey.of(RegistryKeys.BLOCK, MUSIC_BOX_ID)));
-    public static final ComponentType<MusicBoxDrumComponent> DRUM_COMPONENT =
-        ComponentType.<MusicBoxDrumComponent>builder().codec(MusicBoxDrumComponent.CODEC).build();
+    public static final ComponentType<MusicBoxDataComponent> MUSIC_BOX_DATA =
+        ComponentType.<MusicBoxDataComponent>builder().codec(MusicBoxDataComponent.CODEC).build();
 
     public static final SoundEvent MUSIC_BOX_NOTE = SoundEvent.of(id("block.music_box.music_box_note"));
     public static final SoundEvent MUSIC_BOX_WIND_UP = SoundEvent.of(id("block.music_box.music_box_wind_up"));
 
     public static final Item MUSIC_BOX_ITEM =
-        new BlockItem(MUSIC_BOX, new Item.Settings().component(DRUM_COMPONENT, null)
+        new BlockItem(MUSIC_BOX, new Item.Settings().component(MUSIC_BOX_DATA, null)
                                                     .registryKey(RegistryKey.of(RegistryKeys.ITEM, MUSIC_BOX_ID)));
 
     @Override
@@ -49,13 +49,13 @@ public class WindupMusicBoxMod implements ModInitializer {
         Registry.register(Registries.SOUND_EVENT, MUSIC_BOX_NOTE.id(), MUSIC_BOX_NOTE);
         Registry.register(Registries.SOUND_EVENT, MUSIC_BOX_WIND_UP.id(), MUSIC_BOX_WIND_UP);
 
-        Registry.register(Registries.DATA_COMPONENT_TYPE, id("drum_data"), DRUM_COMPONENT);
+        Registry.register(Registries.DATA_COMPONENT_TYPE, id("music_box_data"), MUSIC_BOX_DATA);
 
-        ComponentTooltipAppenderRegistry.addLast(DRUM_COMPONENT);
+        ComponentTooltipAppenderRegistry.addLast(MUSIC_BOX_DATA);
 
-        ItemGroupEvents.modifyEntriesEvent(ItemGroups.FUNCTIONAL).register(entries -> {
-            entries.add(MUSIC_BOX_ITEM.getDefaultStack());
-        });
+        ItemGroupEvents.modifyEntriesEvent(ItemGroups.FUNCTIONAL).register(entries ->
+            entries.add(MUSIC_BOX_ITEM.getDefaultStack())
+        );
     }
 
     public static Identifier id(String path) {

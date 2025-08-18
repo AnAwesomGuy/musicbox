@@ -23,17 +23,17 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-public final class MusicBoxDrumComponent implements TooltipAppender {
-    public static final Codec<short[]> NOTES_CODEC = Codec.of(MusicBoxDrumComponent::encodeNotes,
-                                                              MusicBoxDrumComponent::decodeNotes);
-    public static final Codec<MusicBoxDrumComponent> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-        Codec.INT.optionalFieldOf("key_offset", 0).forGetter(MusicBoxDrumComponent::getKeyOffset),
-        Codec.BOOL.optionalFieldOf("minor", Boolean.FALSE).forGetter(MusicBoxDrumComponent::isInMinor),
-        Codecs.POSITIVE_INT.fieldOf("ticks_per_beat").forGetter(MusicBoxDrumComponent::getTicksPerBeat),
-        Codec.STRING.optionalFieldOf("song_artist", "").forGetter(MusicBoxDrumComponent::getArtist),
-        Codec.STRING.fieldOf("song_name").forGetter(MusicBoxDrumComponent::getSongName),
-        NOTES_CODEC.fieldOf("notes").forGetter(MusicBoxDrumComponent::getNotes)
-    ).apply(instance, MusicBoxDrumComponent::new));
+public final class MusicBoxDataComponent implements TooltipAppender {
+    public static final Codec<short[]> NOTES_CODEC = Codec.of(MusicBoxDataComponent::encodeNotes,
+                                                              MusicBoxDataComponent::decodeNotes);
+    public static final Codec<MusicBoxDataComponent> CODEC = RecordCodecBuilder.create(instance -> instance.group(
+        Codec.INT.optionalFieldOf("key_offset", 0).forGetter(MusicBoxDataComponent::getKeyOffset),
+        Codec.BOOL.optionalFieldOf("minor", Boolean.FALSE).forGetter(MusicBoxDataComponent::isInMinor),
+        Codecs.POSITIVE_INT.fieldOf("ticks_per_beat").forGetter(MusicBoxDataComponent::getTicksPerBeat),
+        Codec.STRING.optionalFieldOf("song_artist", "").forGetter(MusicBoxDataComponent::getArtist),
+        Codec.STRING.fieldOf("song_name").forGetter(MusicBoxDataComponent::getSongName),
+        NOTES_CODEC.fieldOf("notes").forGetter(MusicBoxDataComponent::getNotes)
+    ).apply(instance, MusicBoxDataComponent::new));
 
     public static final int TOTAL_BEATS = 36; // length of the music
     public static final int NOTES_RANGE = 15; // the amount of notes each value in `notes` represents
@@ -57,7 +57,7 @@ public final class MusicBoxDrumComponent implements TooltipAppender {
     private final short[] notes;
     private final int ticksPerNote; // ticks per each value in `notes`
 
-    public MusicBoxDrumComponent(int keyOffset, boolean minor, int ticksPerBeat, String artist, String song) {
+    public MusicBoxDataComponent(int keyOffset, boolean minor, int ticksPerBeat, String artist, String song) {
         this.keyOffset = keyOffset;
         this.minor = minor;
         if (ticksPerBeat <= 0)
@@ -72,7 +72,7 @@ public final class MusicBoxDrumComponent implements TooltipAppender {
         this.notes = new short[TOTAL_BEATS * ticksPerNote];
     }
 
-    public MusicBoxDrumComponent(int keyOffset, boolean minor, int ticksPerBeat, String artist, String song, short[] notes) {
+    public MusicBoxDataComponent(int keyOffset, boolean minor, int ticksPerBeat, String artist, String song, short[] notes) {
         this(keyOffset, minor, ticksPerBeat, artist, song);
         System.arraycopy(notes, 0, this.notes, 0, Math.min(notes.length, this.notes.length));
     }
