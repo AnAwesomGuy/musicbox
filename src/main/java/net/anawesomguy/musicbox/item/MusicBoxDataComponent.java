@@ -68,8 +68,9 @@ public final class MusicBoxDataComponent implements TooltipAppender {
         // basically, if it's divisible by 2, then ticksPerNote = ticksPerBeat / 2,
         // if it's divisible by 4, then it's ticksPerBeat / 4,
         // and the same for 8
+        // otherwise ticksPerNote = ticksPerBeat (and only quarter notes are usable)
         int ticksPerNote = this.ticksPerNote = (ticksPerBeat % 2 == 0) ? (ticksPerBeat / (ticksPerBeat % 4 == 0 ? (ticksPerBeat % 8 == 0 ? 8 : 4) : 2)) : ticksPerBeat;
-        this.notes = new short[TOTAL_BEATS * ticksPerNote];
+        this.notes = new short[TOTAL_BEATS * (ticksPerBeat / ticksPerNote)];
     }
 
     public MusicBoxDataComponent(int keyOffset, boolean minor, int ticksPerBeat, String artist, String song, short[] notes) {
@@ -100,7 +101,7 @@ public final class MusicBoxDataComponent implements TooltipAppender {
         return songName;
     }
 
-    // PLEASE DO NOT MODIFY
+    // it's ok to modify if you know what you're doing, actually
     public short[] getNotes() {
         return notes;
     }
@@ -119,14 +120,6 @@ public final class MusicBoxDataComponent implements TooltipAppender {
 
     public int getTicksPerNote() {
         return ticksPerNote;
-    }
-
-    public int getBpm() {
-        return (60 * 20) / ticksPerBeat;
-    }
-
-    public float getBpm(float tickRate) {
-        return (60F * tickRate) / ticksPerBeat;
     }
 
     public static <T> DataResult<T> encodeNotes(short[] notes, DynamicOps<T> ops, T prefix) {

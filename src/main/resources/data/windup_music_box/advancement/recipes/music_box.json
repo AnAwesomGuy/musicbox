@@ -31,6 +31,7 @@
   "requirements": [
     [
       "has_the_recipe",
+      "has_planks",
       "has_iron"
     ]
   ],

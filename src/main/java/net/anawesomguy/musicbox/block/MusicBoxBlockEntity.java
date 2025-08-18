@@ -24,6 +24,7 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.storage.ReadView;
 import net.minecraft.storage.WriteView;
+import net.minecraft.text.Text;
 import net.minecraft.util.ActionResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
@@ -34,24 +35,26 @@ public class MusicBoxBlockEntity extends BlockEntity {
         MusicBoxBlockEntity::new, WindupMusicBoxMod.MUSIC_BOX).build();
     public static final int
         KEY_ROTATION = 360 / 30, // 12
-        MAX_TENSION = 36;
+        MAX_TENSION = 48;
 
     public static void tick(World world, BlockPos pos, BlockState state, MusicBoxBlockEntity entity) {
+        if (world.isClient)
+            return;
+
         int ticks = entity.ticks++;
         if (entity.windCooldown > 0)
             entity.windCooldown--;
 
         // music playing functions
-        if (!world.isClient && entity.tension > 0) {
-            int tension = entity.tension;
-            entity.tension = tension - 1;
+        int tension = entity.tension;
+        if (tension > 0 && entity.windCooldown <= 0) {
             MusicBoxDataComponent data = entity.data;
             if (data != null) {
-                int ticksPerBeat = data.getTicksPerBeat();
-                if (tension <= 9)
-                    //noinspection SuspiciousIntegerDivAssignment (not sus, intended)
-                    ticksPerBeat *= tension / 3;
-                if (ticks % ticksPerBeat == 0) {
+                int ticksPerNote = data.getTicksPerNote();
+                if (tension < 9)
+                    ticksPerNote *= 2;
+                if (ticks % ticksPerNote == 0) {
+                    entity.tension = tension - 1;
                     short[] notes = data.getNotes();
                     int currentNote = entity.currentNote;
                     entity.currentNote = (currentNote + 1) % notes.length;
@@ -59,8 +62,7 @@ public class MusicBoxBlockEntity extends BlockEntity {
                     data.getSemitones(currentNote, semitones);
                     for (int i = 0, semitonesSize = semitones.size(); i < semitonesSize; i++) {
                         double semitone = semitones.getInt(i);
-                        world.playSound(null, pos, WindupMusicBoxMod.MUSIC_BOX_NOTE, SoundCategory.BLOCKS,
-                                        world.getRandom().nextFloat() * 0.2F + 0.9F,
+                        world.playSound(null, pos, WindupMusicBoxMod.MUSIC_BOX_NOTE, SoundCategory.BLOCKS, 1F,
                                         (float)Math.pow(2.0, semitone / 12.0));
                         ((ServerWorld)world).spawnParticles(
                             ParticleTypes.NOTE, // 7 indents is crazy lol
@@ -84,11 +86,35 @@ public class MusicBoxBlockEntity extends BlockEntity {
     public boolean open = true;
     @Nullable // always null on the client
     public MusicBoxDataComponent data = null;
-    // @Environment(EnvType.CLIENT)
     public int notesLength;
 
     public MusicBoxBlockEntity(BlockPos pos, BlockState state) {
         super(TYPE, pos, state);
+    }
+
+    public ActionResult onUse(World world, BlockPos pos, PlayerEntity player) {
+        if (player.isSneaking()) {
+            @SuppressWarnings("AssignmentUsedAsCondition")
+            SoundEvent sound = (open = !open) ? SoundEvents.BLOCK_WOODEN_TRAPDOOR_OPEN : SoundEvents.BLOCK_WOODEN_TRAPDOOR_CLOSE;
+            world.playSound(player, pos, sound, SoundCategory.BLOCKS, 1F,
+                            world.getRandom().nextFloat() * 0.1F + 0.9F);
+        } else if (!world.isClient && windCooldown <= 2 && tension < MAX_TENSION) {
+            windCooldown = 7;
+            keyRotation = (keyRotation + 1) % KEY_ROTATION;
+            tension += 6;
+            world.playSound(null, pos, WindupMusicBoxMod.MUSIC_BOX_WIND_UP, SoundCategory.BLOCKS, 1F,
+                            world.getRandom().nextFloat() * 0.1F + 0.9F);
+            ((ServerWorld)world).getChunkManager().markForUpdate(pos);
+            if (data == null)
+                player.sendMessage(Text.translatable("windup_music_box.message.music_box.empty"), true);
+            return ActionResult.SUCCESS_SERVER;
+        }
+        return ActionResult.SUCCESS;
+    }
+
+    public ItemStack getPickStack(ItemStack in) {
+        in.set(WindupMusicBoxMod.MUSIC_BOX_DATA, data);
+        return in;
     }
 
     @Override
@@ -99,10 +125,10 @@ public class MusicBoxBlockEntity extends BlockEntity {
     @Override
     public NbtCompound toInitialChunkDataNbt(RegistryWrapper.WrapperLookup registries) {
         NbtCompound nbt = new NbtCompound();
-        nbt.putInt("tension", tension);
         nbt.putBoolean("open", open);
         nbt.putInt("currentNote", 0);
         nbt.putInt("notesLength", data == null ? 0 : data.getNotes().length);
+        nbt.putInt("keyRotation", keyRotation);
         return nbt;
     }
 
@@ -126,6 +152,7 @@ public class MusicBoxBlockEntity extends BlockEntity {
         currentNote = view.getInt("currentNote", 0);
         data = view.read("musicBoxData", MusicBoxDataComponent.CODEC).orElse(null);
         notesLength = view.getOptionalInt("notesLength").orElse(0);
+        keyRotation = view.getInt("keyRotation", 0);
     }
 
     @Override
@@ -134,6 +161,7 @@ public class MusicBoxBlockEntity extends BlockEntity {
         view.putInt("tension", tension);
         view.putBoolean("open", open);
         view.putInt("currentNote", 0);
+        view.putInt("keyRotation", keyRotation);
         if (data != null)
             view.put("musicBoxData", MusicBoxDataComponent.CODEC, data);
     }
@@ -153,36 +181,11 @@ public class MusicBoxBlockEntity extends BlockEntity {
         return currentNote;
     }
 
-    public boolean isWinding() {
-        return windCooldown > 0;
-    }
-
     public int getTension() {
         return tension;
     }
 
     public int getKeyRotation() {
         return keyRotation;
-    }
-
-    public ActionResult onUse(World world, BlockPos pos, PlayerEntity player) {
-        if (player.isSneaking()) {
-            @SuppressWarnings("AssignmentUsedAsCondition")
-            SoundEvent sound = (open = !open) ? SoundEvents.BLOCK_WOODEN_TRAPDOOR_OPEN : SoundEvents.BLOCK_WOODEN_TRAPDOOR_CLOSE;
-            world.playSound(player, pos, sound, SoundCategory.BLOCKS, 1F,
-                            world.getRandom().nextFloat() * 0.1F + 0.9F);
-        } else if (!isWinding() && tension < MAX_TENSION) {
-            windCooldown = 6;
-            keyRotation = (keyRotation + 1) % KEY_ROTATION;
-            tension++;
-            world.playSound(null, pos, WindupMusicBoxMod.MUSIC_BOX_WIND_UP, SoundCategory.BLOCKS, 1F,
-                            world.getRandom().nextFloat() * 0.1F + 0.9F);
-        }
-        return ActionResult.SUCCESS;
-    }
-
-    public ItemStack getPickStack(ItemStack in) {
-        in.set(WindupMusicBoxMod.MUSIC_BOX_DATA, data);
-        return in;
     }
 }

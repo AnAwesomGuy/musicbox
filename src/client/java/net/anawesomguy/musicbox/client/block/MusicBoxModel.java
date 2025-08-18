@@ -15,7 +15,6 @@ import static net.minecraft.client.model.ModelPartBuilder.create;
 import static net.minecraft.util.math.MathHelper.HALF_PI;
 import static net.minecraft.util.math.MathHelper.PI;
 import static net.minecraft.util.math.MathHelper.RADIANS_PER_DEGREE;
-import static net.minecraft.util.math.MathHelper.TAU;
 
 public class MusicBoxModel extends Model {
     private final ModelPart key;
@@ -79,13 +78,14 @@ public class MusicBoxModel extends Model {
 
     public void update(MusicBoxBlockEntity entity, float tickProgress) {
         int notesLength = entity.notesLength;
-        if (notesLength > 0) {
-            drum.pitch = TAU * ((float)entity.getCurrentNote() / notesLength - 1) + (PI / 4F) + tickProgress; // 360deg * (value from 0-1)
-            drum.visible = true;
-        } else
-            drum.visible = false;
+        drum.visible = notesLength > 0;
+//        if (notesLength > 0) {
+//            drum.pitch = TAU * ((float)entity.getCurrentNote() / notesLength - 1) + (PI / 4F); // 360deg * (value from 0-1)
+//            drum.visible = true;
+//        } else
+//            drum.visible = false;
+//        governer.yaw = (drum.pitch * 200) % TAU; // it's fast
         lid.pitch = (entity.open ? RADIANS_PER_DEGREE * 30F : -HALF_PI);
         key.roll = RADIANS_PER_DEGREE * 30F * entity.getKeyRotation();
-        governer.yaw = (drum.pitch * 200) % TAU; // it's fast
     }
 }
