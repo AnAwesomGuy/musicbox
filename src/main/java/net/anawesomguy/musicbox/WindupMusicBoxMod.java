@@ -43,7 +43,8 @@ public class WindupMusicBoxMod implements ModInitializer {
         new BlockItem(MUSIC_BOX, new Item.Settings().component(MUSIC_BOX_DATA, null)
                                                     .registryKey(RegistryKey.of(RegistryKeys.ITEM, MUSIC_BOX_ID)));
 
-    public static final SoundEvent MUSIC_BOX_NOTE = SoundEvent.of(id("block.music_box.music_box_note"));
+    public static final SoundEvent MUSIC_BOX_NOTE_C4 = SoundEvent.of(id("block.music_box.music_box_note.c4"));
+    public static final SoundEvent MUSIC_BOX_NOTE_C6 = SoundEvent.of(id("block.music_box.music_box_note.c6"));
     public static final SoundEvent MUSIC_BOX_WIND_UP = SoundEvent.of(id("block.music_box.music_box_wind_up"));
 
     @Override
@@ -55,7 +56,8 @@ public class WindupMusicBoxMod implements ModInitializer {
 
         Registry.register(Registries.DATA_COMPONENT_TYPE, MUSIC_BOX_DATA_KEY.getValue(), MUSIC_BOX_DATA);
 
-        Registry.register(Registries.SOUND_EVENT, MUSIC_BOX_NOTE.id(), MUSIC_BOX_NOTE);
+        Registry.register(Registries.SOUND_EVENT, MUSIC_BOX_NOTE_C4.id(), MUSIC_BOX_NOTE_C4);
+        Registry.register(Registries.SOUND_EVENT, MUSIC_BOX_NOTE_C6.id(), MUSIC_BOX_NOTE_C6);
         Registry.register(Registries.SOUND_EVENT, MUSIC_BOX_WIND_UP.id(), MUSIC_BOX_WIND_UP);
 
         ComponentTooltipAppenderRegistry.addLast(MUSIC_BOX_DATA);

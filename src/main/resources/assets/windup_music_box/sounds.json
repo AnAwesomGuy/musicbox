@@ -1,7 +1,13 @@
 {
-  "block.music_box.music_box_note": {
+  "block.music_box.music_box_note.c4": {
     "sounds": [
       "windup_music_box:music_box_note_c4"
+    ],
+    "subtitle": "subtitles.windup_music_box.music_box.play"
+  },
+  "block.music_box.music_box_note.c6": {
+    "sounds": [
+      "windup_music_box:music_box_note_c6"
     ],
     "subtitle": "subtitles.windup_music_box.music_box.play"
   },

@@ -51,7 +51,7 @@ public class MusicBoxBlockEntity extends BlockEntity {
             MusicBoxDataComponent data = entity.data;
             if (data != null) {
                 int ticksPerNote = data.getTicksPerNote();
-                if (tension < 9)
+                if (tension < 5)
                     ticksPerNote *= 2;
                 if (ticks % ticksPerNote == 0) {
                     entity.tension = tension - 1;
@@ -62,8 +62,18 @@ public class MusicBoxBlockEntity extends BlockEntity {
                     data.getSemitones(currentNote, semitones);
                     for (int i = 0, semitonesSize = semitones.size(); i < semitonesSize; i++) {
                         double semitone = semitones.getInt(i);
-                        world.playSound(null, pos, WindupMusicBoxMod.MUSIC_BOX_NOTE, SoundCategory.BLOCKS, 1F,
-                                        (float)Math.pow(2.0, semitone / 12.0));
+                        SoundEvent sound;
+                        double adjustedTone;
+                        // mc limits the pitch to only two octaves, so i have to have two sounds to double that
+                        if (semitone > 12) {
+                            sound = WindupMusicBoxMod.MUSIC_BOX_NOTE_C6;
+                            adjustedTone = semitone - 24.0;
+                        } else {
+                            sound = WindupMusicBoxMod.MUSIC_BOX_NOTE_C4;
+                            adjustedTone = semitone;
+                        }
+                        world.playSound(null, pos, sound, SoundCategory.BLOCKS, 1F,
+                                        (float)Math.pow(2.0, adjustedTone / 12.0));
                         ((ServerWorld)world).spawnParticles(
                             ParticleTypes.NOTE, // 7 indents is crazy lol
                             pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5,
