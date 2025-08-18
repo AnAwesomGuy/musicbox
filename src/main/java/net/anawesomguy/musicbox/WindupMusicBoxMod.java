@@ -5,11 +5,13 @@ import net.anawesomguy.musicbox.block.MusicBoxBlockEntity;
 import net.anawesomguy.musicbox.item.MusicBoxDrumComponent;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.item.v1.ComponentTooltipAppenderRegistry;
+import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.minecraft.block.AbstractBlock;
 import net.minecraft.block.Block;
 import net.minecraft.component.ComponentType;
 import net.minecraft.item.BlockItem;
 import net.minecraft.item.Item;
+import net.minecraft.item.ItemGroups;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.registry.RegistryKey;
@@ -47,7 +49,13 @@ public class WindupMusicBoxMod implements ModInitializer {
         Registry.register(Registries.SOUND_EVENT, MUSIC_BOX_NOTE.id(), MUSIC_BOX_NOTE);
         Registry.register(Registries.SOUND_EVENT, MUSIC_BOX_WIND_UP.id(), MUSIC_BOX_WIND_UP);
 
+        Registry.register(Registries.DATA_COMPONENT_TYPE, id("drum_data"), DRUM_COMPONENT);
+
         ComponentTooltipAppenderRegistry.addLast(DRUM_COMPONENT);
+
+        ItemGroupEvents.modifyEntriesEvent(ItemGroups.FUNCTIONAL).register(entries -> {
+            entries.add(MUSIC_BOX_ITEM.getDefaultStack());
+        });
     }
 
     public static Identifier id(String path) {

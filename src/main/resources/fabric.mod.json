@@ -24,13 +24,6 @@
       "net.anawesomguy.musicbox.WindupMusicBoxClient"
     ]
   },
-  "mixins": [
-    "windup_music_box.mixins.json",
-    {
-      "config": "windup_music_box.client.mixins.json",
-      "environment": "client"
-    }
-  ],
   "depends": {
     "fabricloader": ">=0.15",
     "minecraft": "~1.21.8",

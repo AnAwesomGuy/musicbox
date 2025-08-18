@@ -1,3 +1,6 @@
+import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
+
 plugins {
     id 'fabric-loom' version "${loom_version}"
     id 'me.modmuss50.mod-publish-plugin' version '0.8.+'
@@ -58,6 +61,16 @@ processResources {
 
     filesMatching("fabric.mod.json") {
         expand properties
+    }
+
+    doLast {
+        // minify JSONs
+        def slurper = new JsonSlurper()
+        outputs.files.asFileTree.matching {
+            include '**/*.json', '**/*.mcmeta'
+        }.each {
+            it.text = JsonOutput.toJson slurper.parse(it)
+        }
     }
 }
 

@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "misc",
+  "pattern": [
+    " i",
+    "wiw",
+    "lw"
+  ],
+  "key": {
+    "w": "#minecraft:planks",
+    "l": "minecraft:lever",
+    "i": "#minecraft:iron_tool_materials"
+  },
+  "result": {
+    "id": "windup_music_box:music_box"
+  }
+}

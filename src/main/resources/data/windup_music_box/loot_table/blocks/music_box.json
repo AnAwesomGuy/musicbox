@@ -1,0 +1,24 @@
+{
+  "type": "block",
+  "pools": [
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "item",
+          "functions": [
+            {
+              "function": "copy_components",
+              "source": "block_entity",
+              "include": [
+                "windup_music_box:drum_data"
+              ]
+            }
+          ],
+          "name": "windup_music_box:music_box"
+        }
+      ]
+    }
+  ],
+  "random_sequence": "windup_music_box:blocks/music_box"
+}

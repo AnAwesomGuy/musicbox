@@ -1,0 +1,42 @@
+{
+  "parent": "recipes/root",
+  "criteria": {
+    "has_planks": {
+      "trigger": "inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "#planks"
+          }
+        ]
+      }
+    },
+    "has_iron": {
+      "trigger": "inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "items": "#iron_tool_materials"
+          }
+        ]
+      }
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "acacia_door"
+      },
+      "trigger": "recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_the_recipe",
+      "has_iron"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "windup_music_box:music_box"
+    ]
+  }
+}
