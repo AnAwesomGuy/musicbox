@@ -2,6 +2,7 @@ package net.anawesomguy.musicbox;
 
 import net.anawesomguy.musicbox.block.MusicBoxBlock;
 import net.anawesomguy.musicbox.block.MusicBoxBlockEntity;
+import net.anawesomguy.musicbox.item.MusicBoxData;
 import net.anawesomguy.musicbox.item.MusicBoxDataComponent;
 import net.fabricmc.api.ModInitializer;
 import net.fabricmc.fabric.api.event.registry.DynamicRegistries;
@@ -34,10 +35,13 @@ public class WindupMusicBoxMod implements ModInitializer {
                               .sounds(BlockSoundGroup.WOOD)
                               .registryKey(RegistryKey.of(RegistryKeys.BLOCK, MUSIC_BOX_ID)));
 
-    public static final RegistryKey<Registry<MusicBoxDataComponent>> MUSIC_BOX_DATA_KEY = RegistryKey.ofRegistry(
+    public static final RegistryKey<Registry<MusicBoxData>> MUSIC_BOX_DATA_KEY = RegistryKey.ofRegistry(
         id("music_box_data"));
     public static final ComponentType<MusicBoxDataComponent> MUSIC_BOX_DATA =
-        ComponentType.<MusicBoxDataComponent>builder().codec(MusicBoxDataComponent.CODEC).build();
+        ComponentType.<MusicBoxDataComponent>builder()
+                     .codec(MusicBoxDataComponent.CODEC)
+                     .packetCodec(MusicBoxDataComponent.PACKET_CODEC)
+                     .build();
 
     public static final Item MUSIC_BOX_ITEM =
         new BlockItem(MUSIC_BOX, new Item.Settings().component(MUSIC_BOX_DATA, null)
@@ -62,14 +66,14 @@ public class WindupMusicBoxMod implements ModInitializer {
 
         ComponentTooltipAppenderRegistry.addLast(MUSIC_BOX_DATA);
 
-        DynamicRegistries.register(MUSIC_BOX_DATA_KEY, MusicBoxDataComponent.CODEC);
+        DynamicRegistries.registerSynced(MUSIC_BOX_DATA_KEY, MusicBoxData.CODEC);
 
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.FUNCTIONAL).register(entries -> {
             ItemStack defaultStack = MUSIC_BOX_ITEM.getDefaultStack();
             entries.add(defaultStack);
             entries.getContext().lookup().getOrThrow(MUSIC_BOX_DATA_KEY).streamEntries().forEach(reference -> {
                 ItemStack stack = defaultStack.copy();
-                stack.set(MUSIC_BOX_DATA, reference.value());
+                stack.set(MUSIC_BOX_DATA, new MusicBoxDataComponent(reference));
                 entries.add(stack);
             });
         });

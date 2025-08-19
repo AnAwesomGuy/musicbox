@@ -98,7 +98,7 @@ public class MusicBoxBlock extends Block implements BlockEntityProvider {
 
     @Override
     public @Nullable <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world, BlockState state, BlockEntityType<T> type) {
-        return validateTicker(type, MusicBoxBlockEntity::tick);
+        return world.isClient ? validateTicker(type, MusicBoxBlockEntity::tick) : null;
     }
 
     @SuppressWarnings("unchecked")

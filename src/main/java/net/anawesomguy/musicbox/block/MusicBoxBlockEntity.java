@@ -3,6 +3,7 @@ package net.anawesomguy.musicbox.block;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.anawesomguy.musicbox.WindupMusicBoxMod;
+import net.anawesomguy.musicbox.item.MusicBoxData;
 import net.anawesomguy.musicbox.item.MusicBoxDataComponent;
 import net.fabricmc.fabric.api.object.builder.v1.block.entity.FabricBlockEntityTypeBuilder;
 import net.minecraft.block.BlockState;
@@ -42,19 +43,22 @@ public class MusicBoxBlockEntity extends BlockEntity {
             return;
 
         int ticks = entity.ticks++;
-        if (entity.windCooldown > 0)
+        boolean winding = entity.windCooldown > 0;
+        if (winding)
             entity.windCooldown--;
 
         // music playing functions
         int tension = entity.tension;
-        if (tension > 0 && entity.windCooldown <= 0) {
-            MusicBoxDataComponent data = entity.data;
-            if (data != null) {
+        if (tension > 0 && !winding) {
+            MusicBoxDataComponent dataEntry = entity.data;
+            if (dataEntry != null) {
+                MusicBoxData data = dataEntry.value();
                 int ticksPerNote = data.getTicksPerNote();
                 if (tension < 5)
                     ticksPerNote *= 2;
                 if (ticks % ticksPerNote == 0) {
-                    entity.tension = tension - 1;
+                    if (ticks % data.getTicksPerBeat() == 0)
+                        entity.tension = tension - 1;
                     short[] notes = data.getNotes();
                     int currentNote = entity.currentNote;
                     entity.currentNote = (currentNote + 1) % notes.length;
@@ -65,7 +69,7 @@ public class MusicBoxBlockEntity extends BlockEntity {
                         SoundEvent sound;
                         double adjustedTone;
                         // mc limits the pitch to only two octaves, so i have to have two sounds to double that
-                        if (semitone > 12) {
+                        if (semitone >= 12) {
                             sound = WindupMusicBoxMod.MUSIC_BOX_NOTE_C6;
                             adjustedTone = semitone - 24.0;
                         } else {
@@ -137,7 +141,7 @@ public class MusicBoxBlockEntity extends BlockEntity {
         NbtCompound nbt = new NbtCompound();
         nbt.putBoolean("open", open);
         nbt.putInt("currentNote", 0);
-        nbt.putInt("notesLength", data == null ? 0 : data.getNotes().length);
+        nbt.putInt("notesLength", data == null ? 0 : data.value().getNotes().length);
         nbt.putInt("keyRotation", keyRotation);
         return nbt;
     }
