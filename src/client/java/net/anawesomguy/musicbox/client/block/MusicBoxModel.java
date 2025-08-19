@@ -85,7 +85,7 @@ public class MusicBoxModel extends Model {
 //        } else
 //            drum.visible = false;
 //        governer.yaw = (drum.pitch * 200) % TAU; // it's fast
-        lid.pitch = (entity.open ? RADIANS_PER_DEGREE * 30F : -HALF_PI);
+        lid.pitch = (entity.open ? RADIANS_PER_DEGREE * 15F : -HALF_PI);
         key.roll = RADIANS_PER_DEGREE * 30F * entity.getKeyRotation();
     }
 }

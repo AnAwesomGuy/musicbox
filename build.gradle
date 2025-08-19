@@ -32,6 +32,11 @@ loom {
         }
     }
 
+    runs {
+        client {
+            programArgs '--username', 'Player'
+        }
+    }
 }
 
 //fabricApi {
