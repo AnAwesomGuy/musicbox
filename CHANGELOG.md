@@ -1,5 +1,4 @@
-working pre-release
+working pre-release ep. 2
 
-add one more octave for notes
-fix crash cuz of non synced stuff
-sync components from registry
+fix some bug where you actually only had one octave of range
+add happy birthday song

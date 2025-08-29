@@ -69,7 +69,7 @@ public class MusicBoxBlockEntity extends BlockEntity {
                         SoundEvent sound;
                         double adjustedTone;
                         // mc limits the pitch to only two octaves, so i have to have two sounds to double that
-                        if (semitone >= 12) {
+                        if (semitone > 12) {
                             sound = WindupMusicBoxMod.MUSIC_BOX_NOTE_C6;
                             adjustedTone = semitone - 24.0;
                         } else {
@@ -100,7 +100,6 @@ public class MusicBoxBlockEntity extends BlockEntity {
     public boolean open = true;
     @Nullable // always null on the client
     public MusicBoxDataComponent data = null;
-    public int notesLength;
 
     public MusicBoxBlockEntity(BlockPos pos, BlockState state) {
         super(TYPE, pos, state);
@@ -141,7 +140,6 @@ public class MusicBoxBlockEntity extends BlockEntity {
         NbtCompound nbt = new NbtCompound();
         nbt.putBoolean("open", open);
         nbt.putInt("currentNote", 0);
-        nbt.putInt("notesLength", data == null ? 0 : data.value().getNotes().length);
         nbt.putInt("keyRotation", keyRotation);
         return nbt;
     }
@@ -165,7 +163,6 @@ public class MusicBoxBlockEntity extends BlockEntity {
         open = view.getBoolean("open", true);
         currentNote = view.getInt("currentNote", 0);
         data = view.read("musicBoxData", MusicBoxDataComponent.CODEC).orElse(null);
-        notesLength = view.getOptionalInt("notesLength").orElse(0);
         keyRotation = view.getInt("keyRotation", 0);
     }
 

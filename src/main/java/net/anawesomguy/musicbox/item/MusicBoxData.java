@@ -21,10 +21,10 @@ import net.minecraft.network.codec.PacketCodecs;
 import net.minecraft.network.encoding.VarInts;
 import net.minecraft.text.Text;
 import net.minecraft.util.Formatting;
-import net.minecraft.util.dynamic.Codecs;
 import org.apache.commons.lang3.StringUtils;
 
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -32,12 +32,16 @@ public final class MusicBoxData implements TooltipAppender {
     public static final Codec<short[]> NOTES_CODEC = Codec.of(MusicBoxData::encodeNotes,
                                                               MusicBoxData::decodeNotes);
     public static final Codec<MusicBoxData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
-        Codec.INT.optionalFieldOf("key_offset", 0).forGetter(MusicBoxData::getKeyOffset),
+        Codec.intRange(-12, 23).optionalFieldOf("key_offset", 0).forGetter(MusicBoxData::getKeyOffset), // C3 to A#5
         Codec.BOOL.optionalFieldOf("minor", Boolean.FALSE).forGetter(MusicBoxData::isInMinor),
-        Codecs.POSITIVE_INT.fieldOf("ticks_per_beat").forGetter(MusicBoxData::getTicksPerBeat),
+        Codec.intRange(6, 20).fieldOf("ticks_per_beat").forGetter(MusicBoxData::getTicksPerBeat), // 10.8 to 28.8 seconds
         Codec.STRING.optionalFieldOf("song_artist", "").forGetter(MusicBoxData::getArtist),
         Codec.STRING.fieldOf("song_name").forGetter(MusicBoxData::getSongName),
-        NOTES_CODEC.fieldOf("notes").forGetter(MusicBoxData::getNotes)
+        NOTES_CODEC.fieldOf("notes").forGetter(MusicBoxData::getNotes),
+        Codec.INT.validate(value -> {
+            int i = value;
+            return i >= 0 && (i & (i - 1)) == 0 ? DataResult.success(i) : DataResult.error(() -> "use_nth_notes: not a positive power of 2");
+        }).optionalFieldOf("use_nth_notes").forGetter(data -> Optional.of(data.getUseNthNotes()))
     ).apply(instance, MusicBoxData::new));
     public static final PacketCodec<ByteBuf, short[]> SHORT_ARRAY_PACKET_CODEC = PacketCodec.of((value, buf) -> {
         VarInts.write(buf, value.length);
@@ -51,12 +55,13 @@ public final class MusicBoxData implements TooltipAppender {
         return shorts;
     });
     public static final PacketCodec<RegistryByteBuf, MusicBoxData> PACKET_CODEC = PacketCodec.tuple(
-        PacketCodecs.INTEGER, MusicBoxData::getKeyOffset,
+        PacketCodecs.VAR_INT, MusicBoxData::getKeyOffset,
         PacketCodecs.BOOLEAN, MusicBoxData::isInMinor,
-        PacketCodecs.INTEGER, MusicBoxData::getTicksPerBeat,
+        PacketCodecs.VAR_INT, MusicBoxData::getTicksPerBeat,
         PacketCodecs.STRING, MusicBoxData::getArtist,
         PacketCodecs.STRING, MusicBoxData::getSongName,
         SHORT_ARRAY_PACKET_CODEC, MusicBoxData::getNotes,
+        PacketCodecs.VAR_INT, MusicBoxData::getTicksPerNote,
         MusicBoxData::new
     );
 
@@ -82,25 +87,33 @@ public final class MusicBoxData implements TooltipAppender {
     private final short[] notes;
     private final int ticksPerNote; // ticks per each value in `notes`
 
-    public MusicBoxData(int keyOffset, boolean minor, int ticksPerBeat, String artist, String song) {
+    @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+    public MusicBoxData(int keyOffset, boolean minor, int ticksPerBeat, String artist, String song, short[] notes, Optional<Integer> useNthNotes) {
+        this(keyOffset, minor, ticksPerBeat, artist, song, notes, useNthNotes.map(i -> (ticksPerBeat * 4) / i).orElseGet(() -> {
+            // basically, if it's divisible by 2, then ticksPerNote = ticksPerBeat / 2,
+            // if it's divisible by 4, then it's ticksPerBeat / 4,
+            // and the same for 8
+            // otherwise ticksPerNote = ticksPerBeat (and only quarter notes are usable)
+            return (ticksPerBeat % 2 == 0) ? (ticksPerBeat / (ticksPerBeat % 4 == 0 ? (ticksPerBeat % 8 == 0 ? 8 : 4) : 2)) : ticksPerBeat;
+        }));
+    }
+
+    public MusicBoxData(int keyOffset, boolean minor, int ticksPerBeat, String artist, String song, short[] notes, int ticksPerNote) {
         this.keyOffset = keyOffset;
         this.minor = minor;
         if (ticksPerBeat <= 0)
             throw new IllegalArgumentException("ticksPerBeat is not positive");
+        if (ticksPerNote <= 0)
+            throw new IllegalArgumentException("ticksPerNote is not positive");
+        if ((ticksPerNote > ticksPerBeat && ticksPerNote % ticksPerBeat != 0) || ticksPerBeat % ticksPerNote != 0)
+            throw new IllegalArgumentException("ticksPerBeat is not divisible by ticksPerNote");
         this.ticksPerBeat = ticksPerBeat;
         this.artist = Objects.requireNonNull(artist);
         this.songName = Objects.requireNonNull(song);
-        // basically, if it's divisible by 2, then ticksPerNote = ticksPerBeat / 2,
-        // if it's divisible by 4, then it's ticksPerBeat / 4,
-        // and the same for 8
-        // otherwise ticksPerNote = ticksPerBeat (and only quarter notes are usable)
-        int ticksPerNote = this.ticksPerNote = (ticksPerBeat % 2 == 0) ? (ticksPerBeat / (ticksPerBeat % 4 == 0 ? (ticksPerBeat % 8 == 0 ? 8 : 4) : 2)) : ticksPerBeat;
+        this.ticksPerNote = ticksPerNote;
         this.notes = new short[TOTAL_BEATS * (ticksPerBeat / ticksPerNote)];
-    }
-
-    public MusicBoxData(int keyOffset, boolean minor, int ticksPerBeat, String artist, String song, short[] notes) {
-        this(keyOffset, minor, ticksPerBeat, artist, song);
-        System.arraycopy(notes, 0, this.notes, 0, Math.min(notes.length, this.notes.length));
+        if (notes != null)
+            System.arraycopy(notes, 0, this.notes, 0, Math.min(notes.length, this.notes.length));
     }
 
     public void getSemitones(int index, IntList output) {
@@ -111,7 +124,7 @@ public final class MusicBoxData implements TooltipAppender {
         int i = NOTES_RANGE;
         while (i-- > 0) { // 14, 13, ... 1, 0
             if ((notes & 1) == 1) {
-                int semitoneOffset = (minor ? MINOR_OFFSETS : MAJOR_OFFSETS)[i % SCALE_LENGTH] + keyOffset;
+                int semitoneOffset = (minor ? MINOR_OFFSETS : MAJOR_OFFSETS)[i % SCALE_LENGTH] + keyOffset + ((i / SCALE_LENGTH) * 12);
                 output.add(semitoneOffset);
             }
             notes >>>= 1;
@@ -147,6 +160,10 @@ public final class MusicBoxData implements TooltipAppender {
         return ticksPerNote;
     }
 
+    public int getUseNthNotes() {
+        return (4 * ticksPerBeat) / ticksPerNote;
+    }
+
     public static <T> DataResult<T> encodeNotes(short[] notes, DynamicOps<T> ops, T prefix) {
         ListBuilder<T> list = ops.listBuilder();
         for (int i = 0, j = 0, len = notes.length; i < len; i++) {
@@ -176,7 +193,7 @@ public final class MusicBoxData implements TooltipAppender {
             stream.accept(t -> {
                 DataResult<String> oString = ops.getStringValue(t);
                 if (oString.isSuccess()) {
-                    String str = oString.getOrThrow();
+                    String str = oString.getOrThrow().stripTrailing().replace(' ', '0');
                     short s;
                     try {
                         s = Short.parseShort(String.format("+%.15s", str), 2);

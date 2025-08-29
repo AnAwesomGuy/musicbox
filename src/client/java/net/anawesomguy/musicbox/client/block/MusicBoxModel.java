@@ -77,8 +77,6 @@ public class MusicBoxModel extends Model {
     }
 
     public void update(MusicBoxBlockEntity entity, float tickProgress) {
-        int notesLength = entity.notesLength;
-        drum.visible = notesLength > 0;
 //        if (notesLength > 0) {
 //            drum.pitch = TAU * ((float)entity.getCurrentNote() / notesLength - 1) + (PI / 4F); // 360deg * (value from 0-1)
 //            drum.visible = true;

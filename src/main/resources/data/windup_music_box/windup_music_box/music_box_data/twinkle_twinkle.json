@@ -1,6 +1,7 @@
 {
   "key_offset": 12,
   "ticks_per_beat": 12,
+  "use_nth_notes": 8,
   "song_name": "Twinkle Twinkle Little Star",
   "notes": [
     "100000000000000", 2,
