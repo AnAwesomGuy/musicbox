@@ -73,7 +73,6 @@ public class WindupMusicBoxMod implements ModInitializer {
 
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.FUNCTIONAL).register(entries -> {
             ItemStack defaultStack = MUSIC_BOX_ITEM.getDefaultStack();
-            entries.add(defaultStack);
             entries.getContext().lookup().getOrThrow(MUSIC_BOX_DATA_KEY).streamEntries().forEach(reference -> {
                 ItemStack stack = defaultStack.copy();
                 stack.set(MUSIC_BOX_DATA, new MusicBoxDataComponent(reference));

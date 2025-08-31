@@ -27,8 +27,6 @@ import net.minecraft.world.World;
 import net.minecraft.world.WorldView;
 import org.jetbrains.annotations.Nullable;
 
-import static java.util.Objects.requireNonNull;
-
 public class MusicBoxBlock extends Block implements BlockEntityProvider {
     public static final MapCodec<MusicBoxBlock> CODEC = createCodec(MusicBoxBlock::new);
     public static final IntProperty ROTATION = Properties.ROTATION;
@@ -79,8 +77,8 @@ public class MusicBoxBlock extends Block implements BlockEntityProvider {
     @Override
     protected ItemStack getPickStack(WorldView world, BlockPos pos, BlockState state, boolean includeData) {
         ItemStack stack = super.getPickStack(world, pos, state, includeData);
-        return includeData ?
-            ((MusicBoxBlockEntity)requireNonNull(world.getBlockEntity(pos))).getPickStack(stack) :
+        return world.getBlockEntity(pos) instanceof MusicBoxBlockEntity blockEntity ?
+            blockEntity.getPickStack(stack) :
             stack;
     }
 

@@ -43,15 +43,32 @@ public final class MusicBoxData implements TooltipAppender {
             return i >= 0 && (i & (i - 1)) == 0 ? DataResult.success(i) : DataResult.error(() -> "use_nth_notes: not a positive power of 2");
         }).optionalFieldOf("use_nth_notes").forGetter(data -> Optional.of(data.getUseNthNotes()))
     ).apply(instance, MusicBoxData::new));
-    public static final PacketCodec<ByteBuf, short[]> SHORT_ARRAY_PACKET_CODEC = PacketCodec.of((value, buf) -> {
+    public static final PacketCodec<ByteBuf, short[]> NOTES_PACKET_CODEC = PacketCodec.of((value, buf) -> {
         VarInts.write(buf, value.length);
-        for (short s : value)
-            buf.writeShort(s);
+        short i = 0;
+        for (short s : value) {
+            if (s == 0 || s == -32768)
+                i--;
+            else if (i < -1) {
+                buf.writeShort(i);
+                i = 0;
+            } else if (i == -1) {
+                buf.writeShort(0);
+                i = 0;
+            } else
+                buf.writeShort(s & 32767); // mask out the sign bit just in case
+        }
+
     }, buf -> {
         int len = VarInts.read(buf);
         short[] shorts = new short[len];
-        for (int i = 0; i < len; i++)
-            shorts[i] = buf.readShort();
+        for (int i = 0; i < len; i++) {
+            short s = buf.readShort();
+            if (s < 0)
+                i -= s; // skip
+            else
+                shorts[i] = s;
+        }
         return shorts;
     });
     public static final PacketCodec<RegistryByteBuf, MusicBoxData> PACKET_CODEC = PacketCodec.tuple(
@@ -60,7 +77,7 @@ public final class MusicBoxData implements TooltipAppender {
         PacketCodecs.VAR_INT, MusicBoxData::getTicksPerBeat,
         PacketCodecs.STRING, MusicBoxData::getArtist,
         PacketCodecs.STRING, MusicBoxData::getSongName,
-        SHORT_ARRAY_PACKET_CODEC, MusicBoxData::getNotes,
+        NOTES_PACKET_CODEC, MusicBoxData::getNotes,
         PacketCodecs.VAR_INT, MusicBoxData::getTicksPerNote,
         MusicBoxData::new
     );
@@ -188,19 +205,24 @@ public final class MusicBoxData implements TooltipAppender {
 
     public static <T> DataResult<Pair<short[], T>> decodeNotes(DynamicOps<T> ops, T input) {
         return ops.getList(input).setLifecycle(Lifecycle.stable()).map(stream -> {
-            ShortList list = new ShortArrayList(72);
+            ShortList list = new ShortArrayList(36 * 4);
             Stream.Builder<T> failed = Stream.builder();
             stream.accept(t -> {
                 DataResult<String> oString = ops.getStringValue(t);
                 if (oString.isSuccess()) {
                     String str = oString.getOrThrow().stripTrailing().replace(' ', '0');
+
                     short s;
-                    try {
-                        s = Short.parseShort(String.format("+%.15s", str), 2);
-                    } catch (NumberFormatException e) {
-                        failed.add(ops.createString("Invalid binary input, replacing with 0: " + str));
+                    if (str.length() > NOTES_RANGE || str.isEmpty()) {
+                        failed.add(ops.createString("Input empty or longer than 15, replacing with 0: " + str));
                         s = 0;
-                    }
+                    } else
+                        try {
+                            s = Short.parseShort(String.format("+%.15s", str), 2);
+                        } catch (NumberFormatException e) {
+                            failed.add(ops.createString("Invalid binary input, replacing with 0: " + str));
+                            s = 0;
+                        }
                     list.add(s);
                     return;
                 }
@@ -208,11 +230,13 @@ public final class MusicBoxData implements TooltipAppender {
                 DataResult<Number> oNum = ops.getNumberValue(t);
                 if (oNum.isSuccess()) {
                     int s = oNum.getOrThrow().intValue();
-                    while (s-- > 0) {
-                        list.add((short)0);
-                    }
+                    if (s > 0)
+                        while (s-- > 0)
+                            list.add((short)0);
+                    return;
                 }
 
+                failed.add(ops.createString("Invalid input, ignoring: " + t));
             });
             return Pair.of(list.toShortArray(), ops.createList(failed.build()));
         });
