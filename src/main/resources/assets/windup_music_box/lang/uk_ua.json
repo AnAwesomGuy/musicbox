@@ -1,0 +1,8 @@
+{
+  "block.windup_music_box.music_box": "Накручувана музична скринька",
+  "item.windup_music_box.music_box": "Накручувана музична скринька",
+  "subtitles.windup_music_box.music_box.wind_up": "Музична скринька накручується",
+  "subtitles.windup_music_box.music_box.play": "Музична скринька грає",
+  "windup_music_box.message.music_box.empty": "Ця музична скринька порожня!",
+  "modmenu.descriptionTranslation.windup_music_box": "Додає накручувані музичні скриньки. Зроблено для ModFest: Toybox"
+}
