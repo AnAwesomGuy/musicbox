@@ -32,8 +32,11 @@ import net.minecraft.world.World;
 import org.jetbrains.annotations.Nullable;
 
 public class MusicBoxBlockEntity extends BlockEntity {
+    private static final ThreadLocal<IntList> SEMITONES_CACHE = ThreadLocal.withInitial(() -> new IntArrayList(3));
+
     public static final BlockEntityType<MusicBoxBlockEntity> TYPE = FabricBlockEntityTypeBuilder.create(
         MusicBoxBlockEntity::new, WindupMusicBoxMod.MUSIC_BOX).build();
+
     public static final int
         KEY_ROTATION = 360 / 30, // 12
         MAX_TENSION = 36;
@@ -62,7 +65,7 @@ public class MusicBoxBlockEntity extends BlockEntity {
                     short[] notes = data.getNotes();
                     int currentNote = entity.currentNote;
                     entity.currentNote = (currentNote + 1) % notes.length;
-                    IntList semitones = entity.semitonesCache;
+                    IntList semitones = SEMITONES_CACHE.get();
                     data.getSemitones(currentNote, semitones);
                     for (int i = 0, semitonesSize = semitones.size(); i < semitonesSize; i++) {
                         double semitone = semitones.getInt(i);
@@ -80,7 +83,7 @@ public class MusicBoxBlockEntity extends BlockEntity {
                                         (float)Math.pow(2.0, adjustedTone / 12.0));
                         ((ServerWorld)world).spawnParticles(
                             ParticleTypes.NOTE, // 7 indents is crazy lol
-                            pos.getX() + 0.5, pos.getY() + 1, pos.getZ() + 0.5,
+                            pos.getX() + 0.5, pos.getY() + 0.9 + 0.3 * i, pos.getZ() + 0.5,
                             0, semitone / 24.0,
                             // for some reason the note particle uses the velocityX to determine its color
                             0.0, 0.0, 1.0
@@ -96,7 +99,6 @@ public class MusicBoxBlockEntity extends BlockEntity {
     private int keyRotation = 1;
     private int tension = 0;
     private int currentNote = 0;
-    private final IntList semitonesCache = new IntArrayList();
     public boolean open = true;
     @Nullable // always null on the client
     public MusicBoxDataComponent data = null;
