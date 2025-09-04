@@ -1,0 +1,8 @@
+{
+  "block.windup_music_box.music_box": "Завідна музична скринька",
+  "item.windup_music_box.music_box": "Завідна музична скринька",
+  "subtitles.windup_music_box.music_box.wind_up": "Музична скринька заводиться",
+  "subtitles.windup_music_box.music_box.play": "Музична скринька грає",
+  "windup_music_box.message.music_box.empty": "Ця музична скринька порожня!",
+  "modmenu.descriptionTranslation.windup_music_box": "Додає завідні музичні скриньки. Зроблено для ModFest: Toybox"
+}
