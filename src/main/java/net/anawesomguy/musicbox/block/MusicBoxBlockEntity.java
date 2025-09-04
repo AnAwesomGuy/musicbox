@@ -116,7 +116,7 @@ public class MusicBoxBlockEntity extends BlockEntity {
         } else if (!world.isClient && windCooldown <= 2 && tension < MAX_TENSION) {
             windCooldown = 7;
             keyRotation = (keyRotation + 1) % KEY_ROTATION;
-            tension += 5;
+            tension += 4;
             world.playSound(null, pos, WindupMusicBoxMod.MUSIC_BOX_WIND_UP, SoundCategory.BLOCKS, 1F,
                             world.getRandom().nextFloat() * 0.1F + 0.9F);
             ((ServerWorld)world).getChunkManager().markForUpdate(pos);

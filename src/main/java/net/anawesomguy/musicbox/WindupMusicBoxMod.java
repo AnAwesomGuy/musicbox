@@ -22,12 +22,10 @@ import net.minecraft.registry.RegistryKeys;
 import net.minecraft.sound.BlockSoundGroup;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.util.Identifier;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class WindupMusicBoxMod implements ModInitializer {
     public static final String MOD_ID = "windup_music_box";
-    public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
+//    public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
     public static final Identifier MUSIC_BOX_ID = Identifier.of(MOD_ID, "music_box");
 
@@ -48,7 +46,8 @@ public class WindupMusicBoxMod implements ModInitializer {
 
     public static final Item MUSIC_BOX_ITEM =
         new BlockItem(MUSIC_BOX, new Item.Settings().component(MUSIC_BOX_DATA, null)
-                                                    .registryKey(RegistryKey.of(RegistryKeys.ITEM, MUSIC_BOX_ID)));
+                                                    .registryKey(RegistryKey.of(RegistryKeys.ITEM, MUSIC_BOX_ID))
+                                                    .useBlockPrefixedTranslationKey());
 
     public static final SoundEvent MUSIC_BOX_NOTE_C4 = SoundEvent.of(id("block.music_box.music_box_note.c4"));
     public static final SoundEvent MUSIC_BOX_NOTE_C6 = SoundEvent.of(id("block.music_box.music_box_note.c6"));

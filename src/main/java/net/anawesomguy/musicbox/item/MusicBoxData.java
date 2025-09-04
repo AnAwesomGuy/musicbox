@@ -34,7 +34,7 @@ public final class MusicBoxData implements TooltipAppender {
     public static final Codec<MusicBoxData> CODEC = RecordCodecBuilder.create(instance -> instance.group(
         Codec.intRange(-12, 23).optionalFieldOf("key_offset", 0).forGetter(MusicBoxData::getKeyOffset), // C3 to A#5
         Codec.BOOL.optionalFieldOf("minor", Boolean.FALSE).forGetter(MusicBoxData::isInMinor),
-        Codec.intRange(6, 20).fieldOf("ticks_per_beat").forGetter(MusicBoxData::getTicksPerBeat), // 10.8 to 28.8 seconds
+        Codec.intRange(4, 20).fieldOf("ticks_per_beat").forGetter(MusicBoxData::getTicksPerBeat), // 10.8 to 28.8 seconds
         Codec.STRING.optionalFieldOf("song_artist", "").forGetter(MusicBoxData::getArtist),
         Codec.STRING.fieldOf("song_name").forGetter(MusicBoxData::getSongName),
         NOTES_CODEC.fieldOf("notes").forGetter(MusicBoxData::getNotes),
